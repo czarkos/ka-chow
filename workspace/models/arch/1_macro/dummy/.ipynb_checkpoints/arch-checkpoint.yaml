@@ -7,17 +7,6 @@ architecture:
     name: macro
     <<<: [*container_defaults]
 
-  #- !Component # Column readout (ADC)
-  #  name: adc
-  #  <<<: [*component_defaults, *keep_outputs, *no_coalesce]
-  #  subclass: adc
-  #  attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes}
-  #- !Component # Column readout (ADC)
-  #  name: column_drivers
-  #  <<<: [*component_defaults, *keep_outputs, *no_coalesce]
-  #  subclass: column_drivers
-  #  attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes}
-
   {{ignoreme_placeholder | default('') | indent(2)}}
 
   - !Component # Weight cache stores weights
@@ -64,6 +53,8 @@ architecture:
         factors_only: [M=-1]
         factors: []
         no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+
+  # TODO : Decide where to put the laser
   #- !Component # Row drivers feed inputs onto the rows of the array
   # name: laser
   #  <<<: [*component_defaults, *keep_weights, *no_coalesce]
@@ -119,11 +110,6 @@ architecture:
     <<<: [*component_defaults, *keep_inputs, *no_coalesce]
     subclass: lightning_modulator
     attributes: {width: DAC_RESOLUTION}
-  #- !Component # Row drivers feed inputs onto the rows of the array
-  #  name: WDAC
-  #  <<<: [*component_defaults, *keep_weights, *no_coalesce]
-  #  subclass: dac_lightning
-  #  attributes: {width: DAC_RESOLUTION, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
     
   - !Hierarchical           # Virtualize an XxYxZ-bit MAC as multiple MAC units.
     nodes: *virtualized_modulator # Defined in include/defines.yaml.
