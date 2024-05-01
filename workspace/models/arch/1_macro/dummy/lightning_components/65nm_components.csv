@@ -1,0 +1,17 @@
+COMPONENT: dac_lightning
+technology,resolution,action,energy,area,global_cycle_seconds,comment
+65nm,8,convert|read,0.793,580000,1,energy in pJ;  area in um^2
+65nm,8,write|update|leak,0,580000,1
+
+COMPONENT: adc_lightning
+technology,resolution,action,energy,area,global_cycle_seconds,comment
+65nm,8,convert|read,0.773,580000,1,energy in pJ;  area in um^2
+65nm,8,write|update|leak,0,580000,1
+
+COMPONENT: lightning_photodiode
+technology,resolution,action,energy,area,global_cycle_seconds,comment
+65nm,8,read|write|update|leak,0.0000399,32,1,energy in pJ;  area in um^2
+
+COMPONENT: lightning_modulator
+technology,resolution,action,energy,area,global_cycle_seconds,comment
+65nm,8,read|write|update|leak,0.0000399,2500000,1,energy in pJ;  area in um^2
