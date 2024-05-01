@@ -43,3 +43,9 @@ variables:
   BASE_LATENCY: 1e-7 # ns per cycle
   GLOBAL_CYCLE_SECONDS: BASE_LATENCY * VOLTAGE_LATENCY_SCALE
   READ_PULSE_WIDTH: 1e-9
+
+  # ===========================================================================
+  # LIGHTNING SPECIFIC VARIABLES
+  # ===========================================================================
+  NUM_WAVELENGTHS: 24
+  NUM_PARALLEL_WEIGHTS: 1

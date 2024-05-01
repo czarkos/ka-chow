@@ -22,45 +22,45 @@ architecture:
   
   - !Component # Row drivers feed inputs onto the rows of the array
     name: laser
-    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
-    subclass: input_row_drivers
-    attributes: {width: DAC_RESOLUTION, <<: *cim_component_attributes, temporal_spiking: true}
+    <<<: [*component_defaults, *keep_weights, *no_coalesce]
+    subclass: lightning_laser
+    attributes: {<<: *cim_component_attributes, temporal_spiking: true}
   
   - !Component # Row drivers feed inputs onto the rows of the array
     name: WDAC
-    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    <<<: [*component_defaults, *keep_weights, *no_coalesce]
     subclass: dac_lightning
-    attributes: {width: DAC_RESOLUTION, <<: *cim_component_attributes, temporal_spiking: true}
+    attributes: {width: DAC_RESOLUTION, <<: *cim_component_attributes, temporal_spiking: true, n_instances:NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
   
   - !Component # Row drivers feed inputs onto the rows of the array
-    name: WMU
-    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
-    subclass: input_row_drivers
-    attributes: {width: DAC_RESOLUTION, <<: *cim_component_attributes, temporal_spiking: true}
+    name: weight_modulators
+    <<<: [*component_defaults, *keep_weights, *no_coalesce]
+    subclass: lightning_modulator
+    attributes: {width: DAC_RESOLUTION, <<: *cim_component_attributes, temporal_spiking: true, n_instances:NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
 
   - !ArrayContainer # Each column stores a different weight slice. Columns share inputs.
     name: IMU
-    <<<: [*container_defaults, *spatial_must_reuse_inputs]
-    spatial: {meshX: 2}
-    constraints: {spatial: {maximize_dims: [Y, M]}}
+    <<<: [*container_defaults, *spatial_must_reuse_weights]
+    spatial: {meshX: BATCH_SIZE}
+    constraints: {spatial: {maximize_dims: []}}
     max_utilization: {spatial: {factors: [('M=' + str(IMU.get_fanout()))]}}
 
   - !Component # Column readout (ADC)
     name: adc
     <<<: [*component_defaults, *keep_outputs, *no_coalesce]
     subclass: adc_lightning
-    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes}
+    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes, n_instances:NUM_PARALLEL_WEIGHTS}
 
-  - !Component # Column readout (ADC)
+  - !Component # Photodetectors
     name: photodetector
     <<<: [*component_defaults, *keep_outputs, *no_coalesce]
     subclass: lightning_photodiode
-    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes}
+    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes, n_instances:NUM_PARALLEL_WEIGHTS}
 
   - !ArrayContainer # Each row receives a different input. Rows share outputs.
     name: input_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
-    spatial: {meshY: 24}
+    spatial: {meshY: NUM_WAVELENGTHS}
     constraints: {spatial: {maximize_dims: [C, R, S]}}
     max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}}
 

@@ -15,3 +15,14 @@ technology,resolution,action,energy,area,global_cycle_seconds,comment
 COMPONENT: lightning_modulator
 technology,resolution,action,energy,area,global_cycle_seconds,comment
 65nm,8,read|write|update|leak,0.0000399,2500000,1,energy in pJ;  area in um^2
+
+COMPONENT: lightning_laser
+technology,resolution,action,energy,area,global_cycle_seconds,comment
+65nm,8,compute|read|write|update,0,10000,1,energy in pJ;
+65nm,8,leak,0.0000399,10000,1
+
+COMPONENT: lightning_sram
+technology,width,depth,action,energy,area,global_cycle_seconds,comment
+65nm,64,10000,read,0.191,129000,1,energy in pJ;  area in um^2
+65nm,64,10000,write|update,0.191,129000,1
+65nm,64,10000,leak,0,129000,1

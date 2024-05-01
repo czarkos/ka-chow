@@ -12,7 +12,7 @@ variables:
   WEIGHT_BITS: 8
   INPUT_BITS:  8
   OUTPUT_BITS: 8
-  BATCH_SIZE:  1
+  BATCH_SIZE:  24
 
   # Set by CiM processor if these values are available in the workload.
   # Otherwise, use the defaults here.
