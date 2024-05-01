@@ -9,6 +9,7 @@ architecture:
 
   {{ignoreme_placeholder | default('') | indent(2)}}
 
+  # TODO : Decide what to do with memories
   - !Component # Weight cache stores weights
     name: input_cache
     <<<: [*component_defaults, *keep_inputs]
