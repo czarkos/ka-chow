@@ -19,24 +19,68 @@ architecture:
   #  attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes}
 
   {{ignoreme_placeholder | default('') | indent(2)}}
-  
-  - !Component # Row drivers feed inputs onto the rows of the array
-    name: laser
-    <<<: [*component_defaults, *keep_weights, *no_coalesce]
-    subclass: lightning_laser
-    attributes: {<<: *cim_component_attributes, temporal_spiking: true}
+
+  - !Component # Weight cache stores weights
+    name: input_cache
+    <<<: [*component_defaults, *keep_inputs]
+    subclass: lightning_sram
+    attributes:
+      depth: 4096
+      width: 64
+      datawidth: 8               # To ensure that we can run weight-stationary
+      multiple_buffering: 0.0001 # (as assumed in the Albireo paper)
+    constraints: 
+      temporal: 
+        factors_only: [M=-1]
+        factors: []
+        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+
+  - !Component # Weight cache stores weights
+    name: weight_cache
+    <<<: [*component_defaults, *keep_weights]
+    subclass: lightning_sram
+    attributes:
+      depth: 4096
+      width: 64
+      datawidth: 8               # To ensure that we can run weight-stationary
+      multiple_buffering: 0.0001 # (as assumed in the Albireo paper)
+    constraints: 
+      temporal: 
+        factors_only: [M=-1]
+        factors: []
+        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+
+  - !Component # Weight cache stores weights
+    name: output_cache
+    <<<: [*component_defaults, *keep_outputs]
+    subclass: lightning_sram
+    attributes:
+      depth: 4096
+      width: 64
+      datawidth: 8               # To ensure that we can run weight-stationary
+      multiple_buffering: 0.0001 # (as assumed in the Albireo paper)
+    constraints: 
+      temporal: 
+        factors_only: [M=-1]
+        factors: []
+        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+  #- !Component # Row drivers feed inputs onto the rows of the array
+  # name: laser
+  #  <<<: [*component_defaults, *keep_weights, *no_coalesce]
+  #  subclass: lightning_laser
+  #  attributes: {<<: *cim_component_attributes}
   
   - !Component # Row drivers feed inputs onto the rows of the array
     name: WDAC
     <<<: [*component_defaults, *keep_weights, *no_coalesce]
     subclass: dac_lightning
-    attributes: {width: DAC_RESOLUTION, <<: *cim_component_attributes, temporal_spiking: true, n_instances:NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
+    attributes: {width: DAC_RESOLUTION, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
   
   - !Component # Row drivers feed inputs onto the rows of the array
     name: weight_modulators
     <<<: [*component_defaults, *keep_weights, *no_coalesce]
     subclass: lightning_modulator
-    attributes: {width: DAC_RESOLUTION, <<: *cim_component_attributes, temporal_spiking: true, n_instances:NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
+    attributes: {width: DAC_RESOLUTION, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
 
   - !ArrayContainer # Each column stores a different weight slice. Columns share inputs.
     name: IMU
@@ -49,23 +93,20 @@ architecture:
     name: adc
     <<<: [*component_defaults, *keep_outputs, *no_coalesce]
     subclass: adc_lightning
-    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes, n_instances:NUM_PARALLEL_WEIGHTS}
+    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes, n_instances: NUM_PARALLEL_WEIGHTS*BATCH_SIZE}
 
   - !Component # Photodetectors
     name: photodetector
     <<<: [*component_defaults, *keep_outputs, *no_coalesce]
     subclass: lightning_photodiode
-    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes, n_instances:NUM_PARALLEL_WEIGHTS}
+    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes, n_instances: NUM_PARALLEL_WEIGHTS*BATCH_SIZE}
 
   - !ArrayContainer # Each row receives a different input. Rows share outputs.
     name: input_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
     spatial: {meshY: NUM_WAVELENGTHS}
     constraints: {spatial: {maximize_dims: [C, R, S]}}
-    max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}}
-
-  - !Component # CiM unit stores weights and computes MACs. Defined in include/defines.yaml.
-    <<<: *cim_unit 
+    max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}} 
 
   - !Hierarchical           # Virtualize an XxYxZ-bit MAC as multiple MAC units.
     nodes: *virtualized_mac # Defined in include/defines.yaml.
