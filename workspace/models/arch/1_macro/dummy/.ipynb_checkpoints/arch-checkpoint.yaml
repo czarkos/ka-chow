@@ -71,7 +71,7 @@ architecture:
   #  attributes: {<<: *cim_component_attributes}
   
   - !Component # Row drivers feed inputs onto the rows of the array
-    name: WDAC
+    name: weight_dacs
     <<<: [*component_defaults, *keep_weights, *no_coalesce]
     subclass: dac_lightning
     attributes: {width: DAC_RESOLUTION, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
@@ -108,5 +108,22 @@ architecture:
     constraints: {spatial: {maximize_dims: [C, R, S]}}
     max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}} 
 
+  - !Component # Row drivers feed inputs onto the rows of the array
+    name: input_dac
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: dac_lightning
+    attributes: {width: DAC_RESOLUTION}
+
+  - !Component # Row drivers feed inputs onto the rows of the array
+    name: individual_modulator
+    <<<: [*component_defaults, *keep_inputs, *no_coalesce]
+    subclass: lightning_modulator
+    attributes: {width: DAC_RESOLUTION}
+  #- !Component # Row drivers feed inputs onto the rows of the array
+  #  name: WDAC
+  #  <<<: [*component_defaults, *keep_weights, *no_coalesce]
+  #  subclass: dac_lightning
+  #  attributes: {width: DAC_RESOLUTION, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
+    
   - !Hierarchical           # Virtualize an XxYxZ-bit MAC as multiple MAC units.
-    nodes: *virtualized_mac # Defined in include/defines.yaml.
+    nodes: *virtualized_modulator # Defined in include/defines.yaml.
