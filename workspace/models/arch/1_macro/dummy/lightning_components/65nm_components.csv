@@ -23,6 +23,18 @@ technology,resolution,action,energy,area,global_cycle_seconds,comment
 
 COMPONENT: lightning_sram
 technology,width,depth,action,energy,area,global_cycle_seconds,comment
-65nm,64,10000,read,0.191,129000,1,energy in pJ;  area in um^2
-65nm,64,10000,write|update,0.191,129000,1
-65nm,64,10000,leak,0,129000,1
+65nm,512,4096,read,0.191,129000,1,energy in pJ;  area in um^2
+65nm,512,4096,write|update,0.191,129000,1
+65nm,512,4096,leak,0,129000,1
+
+COMPONENT: lightning_io
+technology,width,depth,action,energy,area,global_cycle_seconds,comment
+65nm,512,4096,read,0.092,8600,1,energy in pJ;  area in um^2
+65nm,512,4096,write|update,0.092,8600,1
+65nm,512,4096,leak,0,8600,1
+
+COMPONENT: lightning_hbm
+technology,width,depth,action,energy,area,global_cycle_seconds,comment
+65nm,512,4096,read,836,81100000 ,1,energy in pJ;  area in um^2
+65nm,512,4096,write|update,836,81100000,1
+65nm,512,4096,leak,0,81100000,1

@@ -9,58 +9,31 @@ architecture:
 
   {{ignoreme_placeholder | default('') | indent(2)}}
 
-  # TODO : Decide what to do with memories
-  - !Component # Input cache stores inputs
-    name: input_cache
+  - !Component # Packet_io models the network stream of the inputs
+    name: packet_io
     <<<: [*component_defaults, *keep_inputs]
-    subclass: lightning_sram
+    subclass: lightning_io
     attributes:
       depth: 4096
       width: 64
-      datawidth: 8               # To ensure that we can run weight-stationary
-      multiple_buffering: 0.0001 # (as assumed in the Albireo paper)
-    constraints: 
-      temporal: 
-        factors_only: [M=-1]
-        factors: []
-        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+      datawidth: 8
+      n_instances: BATCH_SIZE*NUM_WAVELENGTHS
 
-  - !Component # Weight cache stores weights
-    name: weight_cache
+  - !Component # There are n_instances memory controllers (one for each weight-split) that represent the weight memory
+    name: memory_controller
     <<<: [*component_defaults, *keep_weights]
     subclass: lightning_sram
     attributes:
       depth: 4096
       width: 64
-      datawidth: 8               # To ensure that we can run weight-stationary
-      multiple_buffering: 0.0001 # (as assumed in the Albireo paper)
-    constraints: 
-      temporal: 
-        factors_only: [M=-1]
-        factors: []
-        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+      datawidth: 8
+      n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS
 
-  - !Component # Output cache stores outputs
-    name: output_cache
-    <<<: [*component_defaults, *keep_outputs]
-    subclass: lightning_sram
-    attributes:
-      depth: 4096
-      width: 64
-      datawidth: 8               # To ensure that we can run weight-stationary
-      multiple_buffering: 0.0001 # (as assumed in the Albireo paper)
-    constraints: 
-      temporal: 
-        factors_only: [M=-1]
-        factors: []
-        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
-
-  # TODO : Decide where to put the laser
-  #- !Component # Row drivers feed inputs onto the rows of the array
-  # name: laser
-  #  <<<: [*component_defaults, *keep_weights, *no_coalesce]
-  #  subclass: lightning_laser
-  #  attributes: {<<: *cim_component_attributes}
+  - !Component # One laser at the top of the design
+    name: laser
+    <<<: [*component_defaults, *keep_weights, *no_coalesce]
+    subclass: lightning_laser
+    attributes: {<<: *cim_component_attributes}
   
   - !Component
     name: weight_dacs
