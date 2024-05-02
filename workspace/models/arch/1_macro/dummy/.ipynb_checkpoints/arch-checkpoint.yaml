@@ -33,7 +33,7 @@ architecture:
     name: laser
     <<<: [*component_defaults, *keep_weights, *no_coalesce]
     subclass: lightning_laser
-    attributes: {<<: *cim_component_attributes}
+    attributes: {width: DAC_RESOLUTION*NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS, <<: *cim_component_attributes}
   
   - !Component
     name: weight_dacs
@@ -45,7 +45,7 @@ architecture:
     name: weight_modulators
     <<<: [*component_defaults, *keep_weights, *no_coalesce]
     subclass: lightning_modulator
-    attributes: {width: DAC_RESOLUTION, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
+    attributes: {width: INPUT_BITS, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
 
   - !ArrayContainer
     name: IMU
@@ -64,7 +64,10 @@ architecture:
     name: photodetector
     <<<: [*component_defaults, *keep_outputs, *no_coalesce]
     subclass: lightning_photodiode
-    attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes, n_instances: NUM_PARALLEL_WEIGHTS}
+    attributes:
+        width: ENCODED_OUTPUT_BITS*max(NUM_PARALLEL_WEIGHTS, NUM_WAVELENGTHS)
+        <<<: *cim_component_attributes
+        n_instances: NUM_PARALLEL_WEIGHTS
 
   - !ArrayContainer
     name: input_modulator
@@ -83,7 +86,7 @@ architecture:
     name: individual_modulator_placeholder
     <<<: [*component_defaults, *keep_inputs, *no_coalesce]
     subclass: lightning_modulator
-    attributes: {width: DAC_RESOLUTION}
+    attributes: {width: INPUT_BITS}
 
   - !ArrayContainer
     name: virtualized_modulator
