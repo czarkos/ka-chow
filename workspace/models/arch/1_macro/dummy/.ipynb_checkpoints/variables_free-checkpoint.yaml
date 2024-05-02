@@ -48,4 +48,4 @@ variables:
   # LIGHTNING SPECIFIC VARIABLES
   # ===========================================================================
   NUM_WAVELENGTHS: 24
-  NUM_PARALLEL_WEIGHTS: 1
+  NUM_PARALLEL_WEIGHTS: 24

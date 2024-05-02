@@ -107,10 +107,17 @@ architecture:
     attributes: {width: DAC_RESOLUTION}
 
   - !Component # Row drivers feed inputs onto the rows of the array
-    name: individual_modulator
+    name: individual_modulator_placeholder
     <<<: [*component_defaults, *keep_inputs, *no_coalesce]
     subclass: lightning_modulator
     attributes: {width: DAC_RESOLUTION}
-    
+
+  - !ArrayContainer # Each row receives a different input. Rows share outputs.
+    name: virtualized_modulator
+    <<<: [*container_defaults, *spatial_must_reuse_outputs]
+    spatial: {meshY: NUM_WAVELENGTHS}
+    constraints: {spatial: {maximize_dims: [C, R, S]}}
+    max_utilization: {spatial: {factors: [('C=' + str(virtualized_modulator.get_fanout()))]}}
+  
   - !Hierarchical           # Virtualize an XxYxZ-bit MAC as multiple MAC units.
     nodes: *virtualized_modulator # Defined in include/defines.yaml.
