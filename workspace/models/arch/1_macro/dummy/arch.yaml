@@ -10,7 +10,7 @@ architecture:
   {{ignoreme_placeholder | default('') | indent(2)}}
 
   # TODO : Decide what to do with memories
-  - !Component # Weight cache stores weights
+  - !Component # Input cache stores inputs
     name: input_cache
     <<<: [*component_defaults, *keep_inputs]
     subclass: lightning_sram
@@ -40,7 +40,7 @@ architecture:
         factors: []
         no_iteration_over_dataspaces: !nomerge [] # Overwrite default
 
-  - !Component # Weight cache stores weights
+  - !Component # Output cache stores outputs
     name: output_cache
     <<<: [*component_defaults, *keep_outputs]
     subclass: lightning_sram
@@ -62,24 +62,24 @@ architecture:
   #  subclass: lightning_laser
   #  attributes: {<<: *cim_component_attributes}
   
-  - !Component # Row drivers feed inputs onto the rows of the array
+  - !Component
     name: weight_dacs
     <<<: [*component_defaults, *keep_weights, *no_coalesce]
     subclass: dac_lightning
     attributes: {width: DAC_RESOLUTION, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
   
-  - !Component # Row drivers feed inputs onto the rows of the array
+  - !Component
     name: weight_modulators
     <<<: [*component_defaults, *keep_weights, *no_coalesce]
     subclass: lightning_modulator
     attributes: {width: DAC_RESOLUTION, n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS}
 
-  - !ArrayContainer # Each column stores a different weight slice. Columns share inputs.
+  - !ArrayContainer
     name: IMU
     <<<: [*container_defaults, *spatial_must_reuse_weights]
     spatial: {meshX: BATCH_SIZE}
-    constraints: {spatial: {maximize_dims: []}}
-    max_utilization: {spatial: {factors: [('M=' + str(IMU.get_fanout()))]}}
+    #constraints: {spatial: {maximize_dims: []}}
+    #max_utilization: {spatial: {factors: [('M=' + str(IMU.get_fanout()))]}}
 
   - !Component # Column readout (ADC)
     name: adc
@@ -93,31 +93,31 @@ architecture:
     subclass: lightning_photodiode
     attributes: {width: ENCODED_OUTPUT_BITS, <<<: *cim_component_attributes, n_instances: NUM_PARALLEL_WEIGHTS}
 
-  - !ArrayContainer # Each row receives a different input. Rows share outputs.
+  - !ArrayContainer
     name: input_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
     spatial: {meshY: NUM_WAVELENGTHS}
-    constraints: {spatial: {maximize_dims: [C, R, S]}}
-    max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}} 
+    #constraints: {spatial: {maximize_dims: [C, R, S]}}
+    #max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}} 
 
-  - !Component # Row drivers feed inputs onto the rows of the array
+  - !Component
     name: input_dac
     <<<: [*component_defaults, *keep_inputs, *no_coalesce]
     subclass: dac_lightning
     attributes: {width: DAC_RESOLUTION}
 
-  - !Component # Row drivers feed inputs onto the rows of the array
+  - !Component
     name: individual_modulator_placeholder
     <<<: [*component_defaults, *keep_inputs, *no_coalesce]
     subclass: lightning_modulator
     attributes: {width: DAC_RESOLUTION}
 
-  - !ArrayContainer # Each row receives a different input. Rows share outputs.
+  - !ArrayContainer
     name: virtualized_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
     spatial: {meshY: NUM_WAVELENGTHS}
-    constraints: {spatial: {maximize_dims: [C, R, S]}}
-    max_utilization: {spatial: {factors: [('C=' + str(virtualized_modulator.get_fanout()))]}}
+    #constraints: {spatial: {maximize_dims: [C, R, S]}}
+    #max_utilization: {spatial: {factors: [('C=' + str(virtualized_modulator.get_fanout()))]}}
   
-  - !Hierarchical           # Virtualize an XxYxZ-bit MAC as multiple MAC units.
-    nodes: *virtualized_modulator # Defined in include/defines.yaml.
+  - !Hierarchical           # Virtualize an XxYxZ-bit modulator as multiple modulator units.
+    nodes: *virtualized_submodulator # Defined in include/defines.yaml.

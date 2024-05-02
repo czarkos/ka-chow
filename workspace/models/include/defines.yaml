@@ -178,7 +178,7 @@ subcomponents_ignore:
 
   # This is the bit MAC magic that is used to perform bitwise operations in
   # Timeloop.
-  virtualized_modulator: &virtualized_modulator
+  virtualized_submodulator: &virtualized_submodulator
     # ===========================================================================
     - !Container # bitwise_virtualization: Virtualize the bitwise MACs
       # bitwise_virtualization: Virtualize the bitwise MACs to allow parallel
