@@ -26,41 +26,31 @@ def test_energy_breakdown():
     """
     results = utl.parallel_test(
         utl.delayed(utl.quick_run)(
-            macro=MACRO_NAME,
-            variables=dict(
-                SCALING=f'"{s}"',
-                # Albireo authors kept the frequency constant for this specific
-                # table.
-                GLOBAL_CYCLE_SECONDS=0.2e-9,
-            ),
+            macro=MACRO_NAME
+            # variables=dict(
+            #     SCALING=f'"{s}"',
+            #     # Albireo authors kept the frequency constant for this specific
+            #     # table.
+            #     GLOBAL_CYCLE_SECONDS=0.2e-9,
+            # ),
         )
-        for s in ["conservative", "moderate", "aggressive"]
+        for s in ["conservative"]
     )
 
-    def w2pj(*args):  # * 5GHz * 1e12 J->pJ
-        return [y * 0.2e-9 * 1e12 for y in args]
+    def w2pj(*args):  # * 97GHz * 1e15 J->fJ
+        return [y * 0.01030927e-9 * 1e15 for y in args]
 
     # results.consolidate_energy()
-    results.add_compare_ref_energy("MRR", w2pj(7.52, 0.94, 0.38))
-    results.consolidate_energy(
-        ["weight_mach_zehnder_modulator", "input_mach_zehnder_modulator"], "MZM"
-    )
+    results.add_compare_ref_energy("laser", w2pj(3.88 * 1e-6))
+    results.add_compare_ref_energy("photodetector", w2pj(3.88 * 1e-6))
+    results.add_compare_ref_energy("individual_modulator_placeholder", w2pj(3.88 * 1e-6))
+    results.add_compare_ref_energy("weight_modulators", w2pj(3.88 * 1e-6))
+    results.add_compare_ref_energy("adc", w2pj(0.075))
+    results.consolidate_energy(["input_dac", "weight_dacs"], "dac")
+    results.add_compare_ref_energy("dac", w2pj(0.077))
+    results.add_compare_ref_energy("memory_controller", w2pj(0.0186))
+    results.add_compare_ref_energy("packet_io", w2pj(0.009))
 
-    # When generating the results for Table III specifically, the Albireo
-    # authors were running the accelerator at 5GHz for the aggressive design,
-    # rather than the 8GHz that they used elsewhere with the aggressive design.
-    # The original Albireo model was fixed-power, so this results in 8/5 higher
-    # energy for some components. We correct this difference by scaling relevant
-    # reference values by 5/8.
-
-    results.add_compare_ref_energy("MZM", w2pj(3.45, 0.43, 0.17))
-    results.add_compare_ref_energy("laser", w2pj(2.36, 0.09, 0.12 * 5 / 8))
-    results.add_compare_ref_energy("TIA", w2pj(0.14, 0.07, 0.01))
-    results.consolidate_energy(["input_dac", "weight_dac"], "dac")
-    results.add_compare_ref_energy("dac", w2pj(7.93, 3.98, 0.80 * 5 / 8))
-    results.add_compare_ref_energy("adc", w2pj(1.31, 0.65, 0.13 * 5 / 8))
-    results.consolidate_energy(["weight_cache", "global_buffer"], "Cache")
-    results.add_compare_ref_energy("Cache", w2pj(0.03, 0.03, 0.03))
     return results
 
 
@@ -74,42 +64,34 @@ def test_area_breakdown():
     """
     results = utl.single_test(utl.quick_run(macro=MACRO_NAME))
 
-    total_area = 124.6e6  # mm^2
+    total_area = 2095.787 * 1000000  # um^2
     expected_area = {
-        "AWG": 0.72 * total_area,
-        "Star Coupler": 0.17 * total_area,
-        "Laser": 0.06 * total_area,
-        "MRR": 0.008 * total_area,
-        "ADC": 0.004 * total_area,
-        "DAC": 0.0003 * total_area,
-        "Cache": 0.002 * total_area,
-        "Photodiode": 0.002 * total_area,
-        "TIA": 0.001 * total_area,
-        "MZM": 0.037 * total_area,
+        "Packet I/O": 0.00009876957916047766 * total_area,
+        "Memory Controller": 0.03549979077072240642 * total_area,
+        "DAC": 0.16604740844370157845 * total_area,
+        "ADC": 0.00664189633774806313 * total_area,
+        "input_modulator": 0.02862886352477613421 * total_area,
+        "weight_modulator": 0.68709272459462722118 * total_area,
+        "Photodetector": 0.00000036644945311713 * total_area,
+        "Laser": 0.00000477147725412935 * total_area
     }
 
-    results.consolidate_area(["awg"], "AWG")
-    results.add_compare_ref_area("AWG", [expected_area["AWG"]])
-    results.consolidate_area(["star_coupler"], "Star Coupler")
-    results.add_compare_ref_area("Star Coupler", [expected_area["Star Coupler"]])
-    results.consolidate_area(["laser"], "Laser")
-    results.add_compare_ref_area("Laser", [expected_area["Laser"]])
-    results.consolidate_area(["MRR"], "MRR")
-    results.add_compare_ref_area("MRR", [expected_area["MRR"]])
+    results.consolidate_area(["packet_io"], "Packet I/O")
+    results.add_compare_ref_area("Packet I/O", [expected_area["Packet I/O"]])
+    results.consolidate_area(["memory_controller"], "Memory Controller")
+    results.add_compare_ref_area("Memory Controller", [expected_area["Memory Controller"]])
+    results.consolidate_area(["weight_dacs", "input_dac"], "DAC")
+    results.add_compare_ref_area("DAC", [expected_area["DAC"]])
     results.consolidate_area(["adc"], "ADC")
     results.add_compare_ref_area("ADC", [expected_area["ADC"]])
-    results.consolidate_area(["input_dac", "weight_dac"], "DAC")
-    results.add_compare_ref_area("DAC", [expected_area["DAC"]])
-    results.consolidate_area(["weight_cache", "global_buffer"], "Cache")
-    results.add_compare_ref_area("Cache", [expected_area["Cache"]])
-    results.consolidate_area(["photodiode_output_readout"], "Photodiode")
-    results.add_compare_ref_area("Photodiode", [expected_area["Photodiode"]])
-    results.consolidate_area(["TIA"], "TIA")
-    results.add_compare_ref_area("TIA", [expected_area["TIA"]])
-    results.consolidate_area(
-        ["weight_mach_zehnder_modulator", "input_mach_zehnder_modulator"], "MZM"
-    )
-    results.add_compare_ref_area("MZM", [expected_area["MZM"]])
+    results.consolidate_area(["weight_modulators"], "weight_modulator")
+    results.add_compare_ref_area("weight_modulator", [expected_area["weight_modulator"]])
+    results.consolidate_area(["individual_modulator_placeholder"], "input_modulator")
+    results.add_compare_ref_area("input_modulator", [expected_area["input_modulator"]])
+    results.consolidate_area(["photodetector"], "Photodetector")
+    results.add_compare_ref_area("Photodetector", [expected_area["Photodetector"]])
+    results.consolidate_area(["laser"], "Laser")
+    results.add_compare_ref_area("Laser", [expected_area["Laser"]])
 
     results.clear_zero_areas()
     return results

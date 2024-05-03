@@ -51,8 +51,8 @@ architecture:
     name: IMU
     <<<: [*container_defaults, *spatial_must_reuse_weights]
     spatial: {meshX: BATCH_SIZE}
-    #constraints: {spatial: {maximize_dims: []}}
-    #max_utilization: {spatial: {factors: [('M=' + str(IMU.get_fanout()))]}}
+    constraints: {spatial: {maximize_dims: []}}
+    max_utilization: {spatial: {factors: [('M=' + str(IMU.get_fanout()))]}}
 
   - !Component # Column readout (ADC)
     name: adc
@@ -73,8 +73,8 @@ architecture:
     name: input_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
     spatial: {meshY: NUM_WAVELENGTHS}
-    #constraints: {spatial: {maximize_dims: [C, R, S]}}
-    #max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}} 
+    constraints: {spatial: {maximize_dims: [C, R, S]}}
+    max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}} 
 
   - !Component
     name: input_dac
@@ -92,8 +92,8 @@ architecture:
     name: virtualized_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
     spatial: {meshY: NUM_WAVELENGTHS}
-    #constraints: {spatial: {maximize_dims: [C, R, S]}}
-    #max_utilization: {spatial: {factors: [('C=' + str(virtualized_modulator.get_fanout()))]}}
+    constraints: {spatial: {maximize_dims: [C, R, S]}}
+    max_utilization: {spatial: {factors: [('C=' + str(virtualized_modulator.get_fanout()))]}}
   
   - !Hierarchical           # Virtualize an XxYxZ-bit modulator as multiple modulator units.
     nodes: *virtualized_submodulator # Defined in include/defines.yaml.
