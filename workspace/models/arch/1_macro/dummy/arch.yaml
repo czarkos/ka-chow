@@ -9,25 +9,41 @@ architecture:
 
   {{ignoreme_placeholder | default('') | indent(2)}}
 
+  ## Memory controller and packet_io are in the same level of hierarchy that is why they have identical constraints other than the fact that the one keeps weights and the other keeps inputs. It basically is like putting weights and inputs in the same buffer while having an output stationary dataflow, but we have two components here, since we need to use different technologies
+
   - !Component # Packet_io models the network stream of the inputs
     name: packet_io
-    <<<: [*component_defaults, *keep_inputs]
+    <<<: [*component_defaults, *keep_inputs, *keep_outputs]
     subclass: lightning_io
     attributes:
       depth: 4096
       width: 512
       datawidth: 8
       n_instances: BATCH_SIZE*NUM_WAVELENGTHS
-
+    constraints: 
+      #dataspace: {keep_only: [Inputs]}
+      temporal: 
+        factors_only: [M=-1, C=-1, P=-1, Q=-1, N=-1, R=-1, S=-1]
+        factors: []
+        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+        permutation: [C, R, S, N, M, P, Q] # Output stationary with weight broadcasting
+  
   - !Component # There are n_instances memory controllers (one for each weight-split) that represent the weight memory
     name: memory_controller
-    <<<: [*component_defaults, *keep_weights]
+    <<<: [*component_defaults, *keep_weights, *keep_weights]
     subclass: lightning_sram
     attributes:
       depth: 4096
       width: 512
       datawidth: 8
       n_instances: NUM_PARALLEL_WEIGHTS*NUM_WAVELENGTHS
+    constraints: 
+      #dataspace: {keep_only: [Inputs]}
+      temporal: 
+        factors_only: [M=-1, C=-1, P=-1, Q=-1, N=-1, R=-1, S=-1]
+        factors: []
+        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+        permutation: [C, R, S, N, M, P, Q] # Output stationary with weight broadcasting
 
   - !Component # One laser at the top of the design
     name: laser
@@ -51,8 +67,8 @@ architecture:
     name: IMU
     <<<: [*container_defaults, *spatial_must_reuse_weights]
     spatial: {meshX: BATCH_SIZE}
-    constraints: {spatial: {maximize_dims: []}}
-    max_utilization: {spatial: {factors: [('M=' + str(IMU.get_fanout()))]}}
+    #constraints: {spatial: {maximize_dims: [R, S, C]}}
+    max_utilization: {spatial: {factors: [('N=' + str(IMU.get_fanout()))]}}
 
   - !Component # Column readout (ADC)
     name: adc
@@ -73,7 +89,7 @@ architecture:
     name: input_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
     spatial: {meshY: NUM_WAVELENGTHS}
-    constraints: {spatial: {maximize_dims: [C, R, S]}}
+    constraints: {spatial: {maximize_dims: [R, S, C]}}
     max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}} 
 
   - !Component
@@ -92,8 +108,11 @@ architecture:
     name: virtualized_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
     spatial: {meshY: NUM_WAVELENGTHS}
-    constraints: {spatial: {maximize_dims: [C, R, S]}}
-    max_utilization: {spatial: {factors: [('C=' + str(virtualized_modulator.get_fanout()))]}}
+    constraints: 
+        spatial:
+            factors: [M=1, C=1, P=1, Q=1, N=1, R=1, S=1]
+            #maximize_dims: [C, R, S]
+    #max_utilization: {spatial: {factors: [('C=' + str(virtualized_modulator.get_fanout()))]}}
   
   - !Hierarchical           # Virtualize an XxYxZ-bit modulator as multiple modulator units.
     nodes: *virtualized_submodulator # Defined in include/defines.yaml.

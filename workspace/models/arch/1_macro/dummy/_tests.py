@@ -56,11 +56,9 @@ def test_energy_breakdown():
 
 def test_area_breakdown():
     """
-    This test replicates the results presented in Fig 9 of the Albireo paper. We
-    show the area the MRR, MZM, Laser, TIA, DAC, ADC, AWG, and Cache.
+    This test replicates the results for area presented in Table2 of the Lightning paper. We show the area for the Packet       I/O, Memory Controller, DAC, ADC, Modulator, Photodetector and Laser. Our results match perfectly the contents of the       Table2 in the Lightning paper. 
 
-    Albireo's area is dominated by large optical-analog interconnects: AWGs and
-    star couplers.
+    Lightning's area is dominated by the optical modulators and the DACs
     """
     results = utl.single_test(utl.quick_run(macro=MACRO_NAME))
 
