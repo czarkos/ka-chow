@@ -28,39 +28,29 @@ def test_energy_breakdown():
         utl.delayed(utl.quick_run)(
             macro=MACRO_NAME,
             variables=dict(
-                SCALING=f'"{s}"',
+                MAX_UTILIZATION=True
                 # Albireo authors kept the frequency constant for this specific
                 # table.
-                GLOBAL_CYCLE_SECONDS=0.2e-9,
+                # GLOBAL_CYCLE_SECONDS=0.2e-9,
             ),
         )
-        for s in ["conservative", "moderate", "aggressive"]
+        for s in ["conservative"]
     )
 
-    def w2pj(*args):  # * 5GHz * 1e12 J->pJ
-        return [y * 0.2e-9 * 1e12 for y in args]
+    def w2pj(*args):  # * 97GHz * 1e12 J->pJ
+        return [y * 0.01030927e-9 * 1e12 for y in args]
 
     # results.consolidate_energy()
-    results.add_compare_ref_energy("MRR", w2pj(7.52, 0.94, 0.38))
-    results.consolidate_energy(
-        ["weight_mach_zehnder_modulator", "input_mach_zehnder_modulator"], "MZM"
-    )
+    results.add_compare_ref_energy("laser", w2pj(2.23 * 1e-3))
+    results.add_compare_ref_energy("photodetector", w2pj(2.23 * 1e-3))
+    results.add_compare_ref_energy("individual_modulator_placeholder", w2pj(2.23 * 1e-3))
+    results.add_compare_ref_energy("weight_modulators", w2pj(2.23 * 1e-3))
+    results.add_compare_ref_energy("adc", w2pj(1.8))
+    results.consolidate_energy(["input_dac", "weight_dacs"], "dac")
+    results.add_compare_ref_energy("dac", w2pj(46.2))
+    results.add_compare_ref_energy("memory_controller", w2pj(10.72))
+    results.add_compare_ref_energy("packet_io", w2pj(0.227))
 
-    # When generating the results for Table III specifically, the Albireo
-    # authors were running the accelerator at 5GHz for the aggressive design,
-    # rather than the 8GHz that they used elsewhere with the aggressive design.
-    # The original Albireo model was fixed-power, so this results in 8/5 higher
-    # energy for some components. We correct this difference by scaling relevant
-    # reference values by 5/8.
-
-    results.add_compare_ref_energy("MZM", w2pj(3.45, 0.43, 0.17))
-    results.add_compare_ref_energy("laser", w2pj(2.36, 0.09, 0.12 * 5 / 8))
-    results.add_compare_ref_energy("TIA", w2pj(0.14, 0.07, 0.01))
-    results.consolidate_energy(["input_dac", "weight_dac"], "dac")
-    results.add_compare_ref_energy("dac", w2pj(7.93, 3.98, 0.80 * 5 / 8))
-    results.add_compare_ref_energy("adc", w2pj(1.31, 0.65, 0.13 * 5 / 8))
-    results.consolidate_energy(["weight_cache", "global_buffer"], "Cache")
-    results.add_compare_ref_energy("Cache", w2pj(0.03, 0.03, 0.03))
     return results
 
 
