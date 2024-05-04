@@ -11,6 +11,9 @@ import scripts
 
 
 def test_energy_breakdown():
+    """
+    lightning_doc
+    """
     results = utl.parallel_test(
         utl.delayed(utl.quick_run)(
             macro=MACRO_NAME,
@@ -43,6 +46,9 @@ def test_energy_breakdown():
 
 
 def test_area_breakdown():
+    """
+    lightning_doc
+    """
     results = utl.single_test(utl.quick_run(macro=MACRO_NAME))
 
     total_area = 2095.787 * 1000000  # um^2
@@ -79,6 +85,9 @@ def test_area_breakdown():
 
 
 def test_explore_architectures(dnn_name: str):
+    """
+    lightning_doc
+    """
     dnn_dir = utl.path_from_model_dir(f"workloads/{dnn_name}")
     layer_paths = [
         os.path.join(dnn_dir, l) for l in os.listdir(dnn_dir) if l.endswith(".yaml")
@@ -128,6 +137,9 @@ def test_explore_architectures(dnn_name: str):
 
 
 def test_full_dnn(dnn_name: str):
+    """
+    lightning_doc
+    """
     dnn_dir = utl.path_from_model_dir(f"workloads/{dnn_name}")
     layer_paths = [
         os.path.join(dnn_dir, l) for l in os.listdir(dnn_dir) if l.endswith(".yaml")
@@ -155,6 +167,9 @@ def test_full_dnn(dnn_name: str):
 
 
 def test_explore_main_memory(dnn_name: str):
+    """
+    lightning_doc
+    """
     dnn_dir = utl.path_from_model_dir(f"workloads/{dnn_name}")
     layer_paths = [
         os.path.join(dnn_dir, l) for l in os.listdir(dnn_dir) if l.endswith(".yaml")
