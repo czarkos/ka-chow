@@ -12,14 +12,31 @@ architecture:
   ## Memory controller and packet_io are in the same level of hierarchy that is why they have identical constraints other than the fact that the one keeps weights and the other keeps inputs. It basically is like putting weights and inputs in the same buffer while having an output stationary dataflow, but we have two components here, since we need to use different technologies
 
   - !Component # Packet_io models the network stream of the inputs
-    name: packet_io
-    <<<: [*component_defaults, *keep_inputs, *keep_outputs]
+    name: packet_io_input
+    <<<: [*component_defaults, *keep_inputs]
     subclass: lightning_io
     attributes:
       depth: 4096
       width: 512
       datawidth: 8
       n_instances: BATCH_SIZE*NUM_WAVELENGTHS
+    constraints: 
+      #dataspace: {keep_only: [Inputs]}
+      temporal: 
+        factors_only: [M=-1, C=-1, P=-1, Q=-1, N=-1, R=-1, S=-1]
+        factors: []
+        no_iteration_over_dataspaces: !nomerge [] # Overwrite default
+        permutation: [C, R, S, N, M, P, Q] # Output stationary with weight broadcasting
+
+  - !Component # Packet_io models the network stream of the inputs
+    name: packet_io_output
+    <<<: [*component_defaults, *keep_outputs]
+    subclass: lightning_io
+    attributes:
+      depth: 4096
+      width: 512
+      datawidth: 8
+      n_instances: NUM_PARALLEL_WEIGHTS*BATCH_SIZE
     constraints: 
       #dataspace: {keep_only: [Inputs]}
       temporal: 
