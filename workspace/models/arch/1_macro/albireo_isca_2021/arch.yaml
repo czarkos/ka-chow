@@ -161,7 +161,7 @@ architecture:
       maximize_c: not spec.variables.get("MAX_UTILIZATION", False) and is_fc
       max_c: spec.problem.instance["C"] if not spec.variables.get("MAX_UTILIZATION", False) else 1
       assigned_c: min(max_c, max_weights, max_inputs) if maximize_c else -1
-
+      
     constraints:
       spatial:
         split: 0

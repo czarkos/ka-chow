@@ -26,7 +26,7 @@ architecture:
         factors_only: [M=-1, C=-1, P=-1, Q=-1, N=-1, R=-1, S=-1]
         factors: []
         no_iteration_over_dataspaces: !nomerge [] # Overwrite default
-        permutation: [C, R, S, N, M, P, Q] # Output stationary with weight broadcasting
+        permutation: [R, S, C, N, M, P, Q] # Output stationary with weight broadcasting
 
   - !Component # Packet_io models the network stream of the inputs
     name: packet_io_output
@@ -43,7 +43,7 @@ architecture:
         factors_only: [M=-1, C=-1, P=-1, Q=-1, N=-1, R=-1, S=-1]
         factors: []
         no_iteration_over_dataspaces: !nomerge [] # Overwrite default
-        permutation: [C, R, S, N, M, P, Q] # Output stationary with weight broadcasting
+        permutation: [R, S, C, N, M, P, Q] # Output stationary with weight broadcasting
   
   - !Component # There are n_instances memory controllers (one for each weight-split) that represent the weight memory
     name: memory_controller
@@ -60,7 +60,7 @@ architecture:
         factors_only: [M=-1, C=-1, P=-1, Q=-1, N=-1, R=-1, S=-1]
         factors: []
         no_iteration_over_dataspaces: !nomerge [] # Overwrite default
-        permutation: [C, R, S, N, M, P, Q] # Output stationary with weight broadcasting
+        permutation: [R, S, C, N, M, P, Q] # Output stationary with weight broadcasting
 
   - !Component # One laser at the top of the design
     name: laser
@@ -102,13 +102,15 @@ architecture:
         <<<: *cim_component_attributes
         n_instances: NUM_PARALLEL_WEIGHTS
 
-  - !ArrayContainer
+  - !ArrayContainer # Similar to albireo how each row works on a different column of the filter weights,
+    # so too does each im work on a different column of the weights.
     name: input_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
     spatial: {meshY: NUM_WAVELENGTHS}
-    #constraints: {spatial: {maximize_dims: [R, S, C]}}
-    #constraints: {spatial: {maximize_dims: [C]}}
-    max_utilization: {spatial: {factors: [('C=' + str(input_modulator.get_fanout()))]}} 
+    constraints: 
+        spatial:
+            maximize_dims: [C, S]
+    #max_utilization: {spatial: {factors: [('S=' + str(input_modulator.get_fanout()))]}} 
 
   - !Component
     name: input_dac
@@ -125,12 +127,11 @@ architecture:
   - !ArrayContainer
     name: virtualized_modulator
     <<<: [*container_defaults, *spatial_must_reuse_outputs]
-    spatial: {meshY: NUM_WAVELENGTHS}
+    spatial: {meshY: NUM_PARALLEL_WEIGHTS}
     constraints: 
         spatial:
-            #factors: [M=1, C=1, P=1, Q=1, N=1, R=1, S=1]
-            maximize_dims: [R, S]
-    max_utilization: {spatial: {factors: [('R=' + str(virtualized_modulator.get_fanout()))]}}
+            maximize_dims: [C, R]
+    #max_utilization: {spatial: {factors: [('R=' + str(virtualized_modulator.get_fanout()))]}}
   
   - !Hierarchical           # Virtualize an XxYxZ-bit modulator as multiple modulator units.
     nodes: *virtualized_submodulator # Defined in include/defines.yaml.
