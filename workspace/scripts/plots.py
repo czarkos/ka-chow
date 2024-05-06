@@ -59,6 +59,7 @@ def bar_side_by_side(
     ax=None,
     missing_ok=False,
     legend_loc=None,
+    flip_axes=False,
 ):
     ax_provided = ax is not None
     _, ax = plt.subplots() if ax is None else (None, ax)
@@ -68,23 +69,42 @@ def bar_side_by_side(
 
     print_errors(result, consolidate_keys(result, missing_ok=True))
 
-    for i, key in enumerate(consolidate_keys(result, missing_ok=missing_ok)):
-        rects = ax.bar(
-            x - width / 2 + i * width,
-            [r[key] for r in result.values()],
-            width,
-            label=key,
-        )
-    ax.set_ylabel(ylabel)
-    ax.set_xlabel(xlabel)
-    ax.set_title(title)
-    ax.set_xticks(x)
-    ax.set_xticklabels(result.keys(), rotation=90)
-    ax.set_ylim(bottom=0)
-    if len(consolidate_keys(result, missing_ok=missing_ok)) > 1:
-        ax.legend(loc=legend_loc)
-    if not ax_provided:
-        plt.show()
+    if not flip_axes:
+        for i, key in enumerate(consolidate_keys(result, missing_ok=missing_ok)):
+            rects = ax.bar(
+                x - width / 2 + i * width,
+                [r[key] for r in result.values()],
+                width,
+                label=key,
+            )
+        ax.set_ylabel(ylabel)
+        ax.set_xlabel(xlabel)
+        ax.set_title(title)
+        ax.set_xticks(x)
+        ax.set_xticklabels(result.keys(), rotation=90)
+        ax.set_ylim(bottom=0)
+        if len(consolidate_keys(result, missing_ok=missing_ok)) > 1:
+            ax.legend(loc=legend_loc)
+        if not ax_provided:
+            plt.show()
+    else:
+        for i, key in enumerate(consolidate_keys(result, missing_ok=missing_ok)):
+            rects = ax.barh(
+                x - width / 2 + i * width,
+                [r[key] for r in result.values()],
+                width,
+                label=key,
+            )
+        ax.set_ylabel(xlabel)
+        ax.set_xlabel(ylabel)
+        ax.set_title(title)
+        ax.set_yticks(x)
+        ax.set_yticklabels(result.keys(), rotation=0)
+        # ax.set_xlim(bottom=0)
+        if len(consolidate_keys(result, missing_ok=missing_ok)) > 1:
+            ax.legend(loc=legend_loc)
+        if not ax_provided:
+            plt.show()
 
 
 def bar_stacked(
