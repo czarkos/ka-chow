@@ -136,7 +136,7 @@ def test_explore_architectures(dnn_name: str):
     return results.aggregate_by("N_COLUMNS", "N_PLCU", "N_PLCG")
 
 
-def test_full_dnn(dnn_name: str, batch_sizes: list, num_parallel_batches: int = None):
+def test_full_dnn(dnn_name: str, batch_sizes: list, num_parallel_wavelengths: list, num_parallel_batches: list, num_parallel_weights: list):
     """
     lightning_doc
     """
@@ -144,56 +144,6 @@ def test_full_dnn(dnn_name: str, batch_sizes: list, num_parallel_batches: int = 
     layer_paths = [
         os.path.join(dnn_dir, l) for l in os.listdir(dnn_dir) if l.endswith(".yaml")
     ]
-
-    def callfunc(spec):  # Speed up the test by reducing the victory condition
-        spec.mapper.victory_condition = 10
-
-    if num_parallel_batches is None:
-        results = utl.parallel_test(
-            utl.delayed(utl.run_layer)(
-                macro=MACRO_NAME,
-                layer=l,
-                variables=dict(
-                    BATCH_SIZE=n,
-                    SCALING=f'"{s}"',
-                ),
-                system="ws_dummy_buffer_one_macro",
-                callfunc=callfunc,
-            )
-            for s in ["conservative"]
-            for n in batch_sizes
-            for l in layer_paths
-        )
-    else:
-        results = utl.parallel_test(
-            utl.delayed(utl.run_layer)(
-                macro=MACRO_NAME,
-                layer=l,
-                variables=dict(
-                    BATCH_SIZE=n,
-                    PARALLEL_BATCH_SIZE=num_parallel_batches,
-                    SCALING=f'"{s}"',
-                ),
-                system="ws_dummy_buffer_one_macro",
-                callfunc=callfunc,
-            )
-            for s in ["conservative"]
-            for n in batch_sizes
-            for l in layer_paths
-        )
-    return results
-
-
-def test_explore_main_memory(dnn_name: str):
-    """
-    lightning_doc
-    """
-    dnn_dir = utl.path_from_model_dir(f"workloads/{dnn_name}")
-    layer_paths = [
-        os.path.join(dnn_dir, l) for l in os.listdir(dnn_dir) if l.endswith(".yaml")
-    ]
-
-    layer_paths = [l for l in layer_paths if "From einsum" not in open(l, "r").read()]
 
     def callfunc(spec):  # Speed up the test by reducing the victory condition
         spec.mapper.victory_condition = 10
@@ -204,42 +154,22 @@ def test_explore_main_memory(dnn_name: str):
             layer=l,
             variables=dict(
                 BATCH_SIZE=n,
+                NUM_WAVELENGTHS=w,
+                NUM_PARALLEL_WEIGHTS=pw,
+                PARALLEL_BATCH_SIZE=b,
                 SCALING=f'"{s}"',
-                GLB_DEPTH_SCALE=g,
-                SYSTEM_SETTING=f'"{t}"',
             ),
-            system=t,
+            system="ws_dummy_buffer_one_macro",
             callfunc=callfunc,
         )
+        for s in ["conservative"]
+        for n in batch_sizes
         for l in layer_paths
-        for s in ["conservative", "moderate", "aggressive"]
-        for n, t, g in [
-            (1, "fetch_all_lpddr4", 1),
-            (1, "fetch_weights_lpddr4", 2),
-            (8, "fetch_all_lpddr4", 16),
-            (8, "fetch_weights_lpddr4", 16),
-        ]
+        for w in num_parallel_wavelengths
+        for pw in num_parallel_weights
+        for b in num_parallel_batches
     )
-
-    results.consolidate_energy(["main_memory"], "DRAM")
-    results.consolidate_energy(
-        ["weight_mach_zehnder_modulator", "weight_dac", "weight_cache"],
-        "Weight Processing",
-    )
-    results.consolidate_energy(
-        ["input_mach_zehnder_modulator", "input_dac", "input_MRR"],
-        "Input Processing",
-    )
-    results.consolidate_energy(["adc", "output_regs", "TIA"], "Output Processing")
-    results.consolidate_energy(["laser", "MRR", "global_buffer"], "Other")
-    results.clear_zero_energies()
-
-    return results.aggregate_by(
-        "BATCH_SIZE",
-        "SCALING",
-        "SYSTEM_SETTING",
-    )
-
+    return results
 
 if __name__ == "__main__":
     test_energy_breakdown()
