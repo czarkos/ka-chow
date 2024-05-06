@@ -40,7 +40,7 @@ variables:
   # ===========================================================================
   # Hardware
   # ===========================================================================
-  BASE_LATENCY: 1e-7 # ns per cycle
+  BASE_LATENCY: 0.01 # ns per cycle
   GLOBAL_CYCLE_SECONDS: BASE_LATENCY * VOLTAGE_LATENCY_SCALE
   READ_PULSE_WIDTH: 1e-9
 
@@ -49,3 +49,4 @@ variables:
   # ===========================================================================
   NUM_WAVELENGTHS: 24
   NUM_PARALLEL_WEIGHTS: 24
+  PARALLEL_BATCH_SIZE: 1

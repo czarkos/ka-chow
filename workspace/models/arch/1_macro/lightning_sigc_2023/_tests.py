@@ -136,7 +136,7 @@ def test_explore_architectures(dnn_name: str):
     return results.aggregate_by("N_COLUMNS", "N_PLCU", "N_PLCG")
 
 
-def test_full_dnn(dnn_name: str):
+def test_full_dnn(dnn_name: str, batch_sizes: list, num_parallel_batches: int = None):
     """
     lightning_doc
     """
@@ -148,21 +148,39 @@ def test_full_dnn(dnn_name: str):
     def callfunc(spec):  # Speed up the test by reducing the victory condition
         spec.mapper.victory_condition = 10
 
-    results = utl.parallel_test(
-        utl.delayed(utl.run_layer)(
-            macro=MACRO_NAME,
-            layer=l,
-            variables=dict(
-                BATCH_SIZE=n,
-                SCALING=f'"{s}"',
-            ),
-            system="ws_dummy_buffer_one_macro",
-            callfunc=callfunc,
+    if num_parallel_batches is None:
+        results = utl.parallel_test(
+            utl.delayed(utl.run_layer)(
+                macro=MACRO_NAME,
+                layer=l,
+                variables=dict(
+                    BATCH_SIZE=n,
+                    SCALING=f'"{s}"',
+                ),
+                system="ws_dummy_buffer_one_macro",
+                callfunc=callfunc,
+            )
+            for s in ["conservative"]
+            for n in batch_sizes
+            for l in layer_paths
         )
-        for s in ["conservative"]
-        for n in [1, 8]
-        for l in layer_paths
-    )
+    else:
+        results = utl.parallel_test(
+            utl.delayed(utl.run_layer)(
+                macro=MACRO_NAME,
+                layer=l,
+                variables=dict(
+                    BATCH_SIZE=n,
+                    PARALLEL_BATCH_SIZE=num_parallel_batches,
+                    SCALING=f'"{s}"',
+                ),
+                system="ws_dummy_buffer_one_macro",
+                callfunc=callfunc,
+            )
+            for s in ["conservative"]
+            for n in batch_sizes
+            for l in layer_paths
+        )
     return results
 
 
